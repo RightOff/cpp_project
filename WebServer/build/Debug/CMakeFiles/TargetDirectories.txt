@@ -1,0 +1,14 @@
+/clh/cpp/WebServer/build/Debug/CMakeFiles/rebuild_cache.dir
+/clh/cpp/WebServer/build/Debug/CMakeFiles/edit_cache.dir
+/clh/cpp/WebServer/build/Debug/WebServer/CMakeFiles/rebuild_cache.dir
+/clh/cpp/WebServer/build/Debug/WebServer/CMakeFiles/edit_cache.dir
+/clh/cpp/WebServer/build/Debug/WebServer/CMakeFiles/WebServer.dir
+/clh/cpp/WebServer/build/Debug/WebServer/base/CMakeFiles/rebuild_cache.dir
+/clh/cpp/WebServer/build/Debug/WebServer/base/CMakeFiles/edit_cache.dir
+/clh/cpp/WebServer/build/Debug/WebServer/base/CMakeFiles/libserver_base.dir
+/clh/cpp/WebServer/build/Debug/WebServer/base/tests/CMakeFiles/rebuild_cache.dir
+/clh/cpp/WebServer/build/Debug/WebServer/base/tests/CMakeFiles/edit_cache.dir
+/clh/cpp/WebServer/build/Debug/WebServer/base/tests/CMakeFiles/LoggingTest.dir
+/clh/cpp/WebServer/build/Debug/WebServer/tests/CMakeFiles/rebuild_cache.dir
+/clh/cpp/WebServer/build/Debug/WebServer/tests/CMakeFiles/edit_cache.dir
+/clh/cpp/WebServer/build/Debug/WebServer/tests/CMakeFiles/HTTPClient.dir

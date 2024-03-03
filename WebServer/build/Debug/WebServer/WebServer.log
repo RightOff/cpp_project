@@ -1,0 +1,87 @@
+2024-02-25 22:26:15
+New connection from 127.0.0.1:35080 -- /clh/cpp/WebServer/WebServer-master/WebServer/Server.cpp:45
+2024-02-25 22:26:15
+Request: GET / HTTP/1.1
+User-Agent: Wget/1.20.3 (linux-gnu)
+Accept: */*
+Accept-Encoding: identity
+Host: 127.0.0.1:8190
+Connection: Keep-Alive
+
+ -- /clh/cpp/WebServer/WebServer-master/WebServer/HttpData.cpp:160
+2024-02-25 22:31:23
+New connection from 127.0.0.1:59224 -- /clh/cpp/WebServer/WebServer-master/WebServer/Server.cpp:45
+2024-02-25 22:31:23
+Request:   -- /clh/cpp/WebServer/WebServer-master/WebServer/HttpData.cpp:160
+2024-02-25 22:31:23
+FD = 14, ****** -- /clh/cpp/WebServer/WebServer-master/WebServer/HttpData.cpp:196
+2024-02-25 22:31:25
+New connection from 127.0.0.1:59234 -- /clh/cpp/WebServer/WebServer-master/WebServer/Server.cpp:45
+2024-02-25 22:31:25
+Request: GET  HTTP/1.1 -- /clh/cpp/WebServer/WebServer-master/WebServer/HttpData.cpp:160
+2024-02-25 22:31:25
+FD = 14,GET  HTTP/1.1****** -- /clh/cpp/WebServer/WebServer-master/WebServer/HttpData.cpp:196
+2024-02-25 22:31:27
+New connection from 127.0.0.1:59244 -- /clh/cpp/WebServer/WebServer-master/WebServer/Server.cpp:45
+2024-02-25 22:31:27
+Request: GET / HTTP/1.1
+Host: 192.168.52.135:8888
+Content-Type: application/x-www-form-urlencoded
+Connection: Keep-Alive
+
+ -- /clh/cpp/WebServer/WebServer-master/WebServer/HttpData.cpp:160
+2024-02-25 22:32:18
+New connection from 127.0.0.1:43284 -- /clh/cpp/WebServer/WebServer-master/WebServer/Server.cpp:45
+2024-02-25 22:32:18
+Request: GET / HTTP/1.1
+User-Agent: Wget/1.20.3 (linux-gnu)
+Accept: */*
+Accept-Encoding: identity
+Host: 127.0.0.1
+Connection: Keep-Alive
+
+ -- /clh/cpp/WebServer/WebServer-master/WebServer/HttpData.cpp:160
+2024-02-25 22:32:35
+New connection from 127.0.0.1:52424 -- /clh/cpp/WebServer/WebServer-master/WebServer/Server.cpp:45
+2024-02-25 22:32:35
+Request: GET / HTTP/1.1
+User-Agent: Wget/1.20.3 (linux-gnu)
+Accept: */*
+Accept-Encoding: identity
+Host: 127.0.0.1
+Connection: Keep-Alive
+
+ -- /clh/cpp/WebServer/WebServer-master/WebServer/HttpData.cpp:160
+2024-02-25 22:38:19
+New connection from 127.0.0.1:34102 -- /clh/cpp/WebServer/WebServer-master/WebServer/Server.cpp:45
+2024-02-25 22:38:19
+Request: GET / HTTP/1.1
+User-Agent: Wget/1.20.3 (linux-gnu)
+Accept: */*
+Accept-Encoding: identity
+Host: 127.0.0.1
+Connection: Keep-Alive
+
+ -- /clh/cpp/WebServer/WebServer-master/WebServer/HttpData.cpp:160
+2024-02-25 22:38:36
+New connection from 127.0.0.1:47510 -- /clh/cpp/WebServer/WebServer-master/WebServer/Server.cpp:45
+2024-02-25 22:38:36
+Request: GET / HTTP/1.1
+User-Agent: Wget/1.20.3 (linux-gnu)
+Accept: */*
+Accept-Encoding: identity
+Host: 127.0.0.1
+Connection: Keep-Alive
+
+ -- /clh/cpp/WebServer/WebServer-master/WebServer/HttpData.cpp:160
+2024-02-25 22:38:59
+New connection from 127.0.0.1:38430 -- /clh/cpp/WebServer/WebServer-master/WebServer/Server.cpp:45
+2024-02-25 22:38:59
+Request: GET / HTTP/1.1
+User-Agent: Wget/1.20.3 (linux-gnu)
+Accept: */*
+Accept-Encoding: identity
+Host: 127.0.0.1
+Connection: Keep-Alive
+
+ -- /clh/cpp/WebServer/WebServer-master/WebServer/HttpData.cpp:160
