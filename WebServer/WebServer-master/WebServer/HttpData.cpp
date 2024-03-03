@@ -193,9 +193,10 @@ void HttpData::handleRead() {
       // cout << "readnum == 0" << endl;
     }
 
+    //处于接受请求阶段
     if (state_ == STATE_PARSE_URI) {
-      URIState flag = this->parseURI();
-      if (flag == PARSE_URI_AGAIN)
+      URIState flag = this->parseURI(); //处理URI
+      if (flag == PARSE_URI_AGAIN)  //收到的信息不全
         break;
       else if (flag == PARSE_URI_ERROR) {
         perror("2");
@@ -207,9 +208,11 @@ void HttpData::handleRead() {
       } else
         state_ = STATE_PARSE_HEADERS;
     }
+
     if (state_ == STATE_PARSE_HEADERS) {
+      //处理消息头
       HeaderState flag = this->parseHeaders();
-      if (flag == PARSE_HEADER_AGAIN)
+      if (flag == PARSE_HEADER_AGAIN) //收到的信息不全
         break;
       else if (flag == PARSE_HEADER_ERROR) {
         perror("3");
@@ -217,16 +220,18 @@ void HttpData::handleRead() {
         handleError(fd_, 400, "Bad Request");
         break;
       }
-      if (method_ == METHOD_POST) {
+      if (method_ == METHOD_POST) { //如果是请求POST，继续接收消息体
         // POST方法准备
         state_ = STATE_RECV_BODY;
-      } else {
+      } else {  //如果是GET操作，直接开始处理
         state_ = STATE_ANALYSIS;
       }
     }
+
+    //接收消息体
     if (state_ == STATE_RECV_BODY) {
       int content_length = -1;
-      if (headers_.find("Content-length") != headers_.end()) {
+      if (headers_.find("Content-length") != headers_.end()) {  
         content_length = stoi(headers_["Content-length"]);
       } else {
         // cout << "(state_ == STATE_RECV_BODY)" << endl;
@@ -234,9 +239,12 @@ void HttpData::handleRead() {
         handleError(fd_, 400, "Bad Request: Lack of argument (Content-length)");
         break;
       }
+      //static_cast强制类型转换
       if (static_cast<int>(inBuffer_.size()) < content_length) break;
-      state_ = STATE_ANALYSIS;
+      state_ = STATE_ANALYSIS;  //开始处理
     }
+    
+    //
     if (state_ == STATE_ANALYSIS) {
       AnalysisState flag = this->analysisRequest();
       if (flag == ANALYSIS_SUCCESS) {
@@ -323,25 +331,28 @@ void HttpData::handleConn() {
   }
 }
 
+//处理请求行函数
 URIState HttpData::parseURI() {
-  string &str = inBuffer_;
-  string cop = str;
-  // 读到完整的请求行再开始解析请求
+  string &str = inBuffer_;  //引用读入缓冲区的内容
+  string cop = str; //为被使用
+  // 读到完整的请求行再开始解析请求，从nowReadPos_开始寻找
   size_t pos = str.find('\r', nowReadPos_);
   if (pos < 0) {
-    return PARSE_URI_AGAIN;
+    return PARSE_URI_AGAIN; //读不到完整请求行，设置URIState状态，直接返回
   }
   // 去掉请求行所占的空间，节省空间
   string request_line = str.substr(0, pos);
+  //如果字符串还有内容，保存剩下的内容
   if (str.size() > pos + 1)
-    str = str.substr(pos + 1);
+    str = str.substr(pos + 1);  
   else
     str.clear();
   // Method
   int posGet = request_line.find("GET");
   int posPost = request_line.find("POST");
-  int posHead = request_line.find("HEAD");
-
+  int posHead = request_line.find("HEAD");  //HEAD与GET本质一样，但服务器只返回头部信息。可用于确认资源是否存在
+  
+  //根据请求行信息，设置处理方法
   if (posGet >= 0) {
     pos = posGet;
     method_ = METHOD_GET;
@@ -355,27 +366,31 @@ URIState HttpData::parseURI() {
     return PARSE_URI_ERROR;
   }
 
-  // filename
+  // filename，寻找请求的文件名字
   pos = request_line.find("/", pos);
+
+  //如果找不到请求的文件路径，默认请求为index.xml,默认HTTP版本为1.1
   if (pos < 0) {
     fileName_ = "index.html";
     HTTPVersion_ = HTTP_11;
     return PARSE_URI_SUCCESS;
   } else {
+    //寻找请求文件路径和请求HTTP协议版本之间的空格
     size_t _pos = request_line.find(' ', pos);
     if (_pos < 0)
       return PARSE_URI_ERROR;
     else {
       if (_pos - pos > 1) {
-        fileName_ = request_line.substr(pos + 1, _pos - pos - 1);
-        size_t __pos = fileName_.find('?');
+        fileName_ = request_line.substr(pos + 1, _pos - pos - 1); //获取请求的URL
+        //如果URL中有问号，说明有参数传来，一般用于实现动态页面，本项目不对参数进行处理
+        size_t __pos = fileName_.find('?'); 
         if (__pos >= 0) {
           fileName_ = fileName_.substr(0, __pos);
         }
       }
 
       else
-        fileName_ = "index.html";
+        fileName_ = "index.html"; //如果请求文件为空，采用默认页面
     }
     pos = _pos;
   }
@@ -400,12 +415,15 @@ URIState HttpData::parseURI() {
   return PARSE_URI_SUCCESS;
 }
 
+//解析消息头
 HeaderState HttpData::parseHeaders() {
   string &str = inBuffer_;
   int key_start = -1, key_end = -1, value_start = -1, value_end = -1;
   int now_read_line_begin = 0;
   bool notFinish = true;
   size_t i = 0;
+  
+  //循环解析消息头的键值对
   for (; i < str.size() && notFinish; ++i) {
     switch (hState_) {
       case H_START: {

@@ -15,6 +15,7 @@ class EventLoop;
 class TimerNode;
 class Channel;
 
+//处理状态
 enum ProcessState {
   STATE_PARSE_URI = 1,
   STATE_PARSE_HEADERS,
@@ -23,18 +24,21 @@ enum ProcessState {
   STATE_FINISH
 };
 
+//URI状态
 enum URIState {
   PARSE_URI_AGAIN = 1,
   PARSE_URI_ERROR,
   PARSE_URI_SUCCESS,
 };
 
+//消息头状态
 enum HeaderState {
   PARSE_HEADER_SUCCESS = 1,
   PARSE_HEADER_AGAIN,
   PARSE_HEADER_ERROR
 };
 
+//请求消息解析状态
 enum AnalysisState { ANALYSIS_SUCCESS = 1, ANALYSIS_ERROR };
 
 enum ParseState {
@@ -93,17 +97,17 @@ class HttpData : public std::enable_shared_from_this<HttpData> {
   std::string outBuffer_;
   bool error_;  //错误状态
   ConnectionState connectionState_; //连接状态
-  HttpMethod method_; //请求方法
+  HttpMethod method_; //请求方法：GET、POST、HEAD
   HttpVersion HTTPVersion_; //HTTP版本
   std::string fileName_;
   std::string path_;
   
-  int nowReadPos_;
-  ProcessState state_;  //处理HTTP请求所处阶段
+  int nowReadPos_;  //正在读取消息的位置
+  ProcessState state_;  //处理HTTP请求所处的阶段
   
   ParseState hState_;
   bool keepAlive_;  //活跃状态
-  std::map<std::string, std::string> headers_;
+  std::map<std::string, std::string> headers_;  //存放消息头信息的map
   std::weak_ptr<TimerNode> timer_;
   
   //私有成员函数
