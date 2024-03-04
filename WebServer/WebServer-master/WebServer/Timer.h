@@ -28,9 +28,9 @@ class TimerNode {
   size_t getExpTime() const { return expiredTime_; }
 
  private:
-  bool deleted_;
+  bool deleted_;  //表示该计时器是否需要删除
   size_t expiredTime_;
-  std::shared_ptr<HttpData> SPHttpData;
+  std::shared_ptr<HttpData> SPHttpData; //记录这个计时器的HttpData持有者信息
 };
 
 //TimerNode自定义排序函数（依据到期时间从小到大排序）

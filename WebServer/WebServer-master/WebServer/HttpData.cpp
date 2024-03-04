@@ -12,13 +12,15 @@
 
 using namespace std;
 
+/* 初始化MimeType静态成员变量。其中pthread_once_t是用于多线程控制初始化过程的类型，
+  确保某个函数在本进程中仅执行一次。*/
 pthread_once_t MimeType::once_control = PTHREAD_ONCE_INIT;
 std::unordered_map<std::string, std::string> MimeType::mime;
 
 //默认监听可读事件，边缘触发，EPOLLONESHOT保证同一个SOCKET只能被一个线程处理（注意两种触发方式对其的用法不同）
 const __uint32_t DEFAULT_EVENT = EPOLLIN | EPOLLET | EPOLLONESHOT;  
 const int DEFAULT_EXPIRED_TIME = 2000;              // ms，默认定时器到期事件
-const int DEFAULT_KEEP_ALIVE_TIME = 5 * 60 * 1000;  // ms
+const int DEFAULT_KEEP_ALIVE_TIME = 5 * 60 * 1000;  // ms，默认连接保持时间为5分钟
 
 char favicon[555] = {
     '\x89', 'P',    'N',    'G',    '\xD',  '\xA',  '\x1A', '\xA',  '\x0',
@@ -85,6 +87,7 @@ char favicon[555] = {
     'N',    'D',    '\xAE', 'B',    '\x60', '\x82',
 };
 
+//初始化消息内容映射
 void MimeType::init() {
   mime[".html"] = "text/html";
   mime[".avi"] = "video/x-msvideo";
@@ -102,6 +105,7 @@ void MimeType::init() {
   mime["default"] = "text/html";
 }
 
+//获取资源文件类型名
 std::string MimeType::getMime(const std::string &suffix) {
   pthread_once(&once_control, MimeType::init);
   if (mime.find(suffix) == mime.end())
@@ -137,10 +141,10 @@ void HttpData::reset() {
   hState_ = H_START;
   headers_.clear();
   // keepAlive_ = false;
-  if (timer_.lock()) {
-    shared_ptr<TimerNode> my_timer(timer_.lock());
-    my_timer->clearReq();
-    timer_.reset();
+  if (timer_.lock()) {  //存在与timer_共享对象的share_ptr，返回一个指向timer_的share_ptr指针
+    shared_ptr<TimerNode> my_timer(timer_.lock());  
+    my_timer->clearReq(); //清除该计时器信息
+    timer_.reset(); //释放该指针
   }
 }
 
@@ -157,11 +161,11 @@ void HttpData::seperateTimer() {
 void HttpData::handleRead() {
   __uint32_t &events_ = channel_->getEvents();
   do {
-    bool zero = false;  //请求中断
-    //readn将以引用形式使用zero
+    bool zero = false;  //客户端关闭连接标志
+    //readn将以引用形式操作zero
     int read_num = readn(fd_, inBuffer_, zero);
     LOG << "Request: " << inBuffer_;
-    //当数据读取完成时，清理缓冲inBuffer_，跳出循环
+    //如果连接断开，清理缓冲inBuffer_，跳出循环
     if (connectionState_ == H_DISCONNECTING) {
       inBuffer_.clear();
       break;
@@ -178,7 +182,7 @@ void HttpData::handleRead() {
     //     error_ = true;
     //     break;
     // }
-    else if (zero) {
+    else if (zero) {  //客户端关闭连接，设置连接状态为关闭
       // 有请求出现但是读不到数据，可能是Request
       // Aborted，或者来自网络的数据没有达到等原因
       // 最可能是对端已经关闭了，统一按照对端已经关闭处理
@@ -194,8 +198,10 @@ void HttpData::handleRead() {
     }
 
     //处于接受请求阶段
+
+    //处理URI
     if (state_ == STATE_PARSE_URI) {
-      URIState flag = this->parseURI(); //处理URI
+      URIState flag = this->parseURI(); 
       if (flag == PARSE_URI_AGAIN)  //收到的信息不全
         break;
       else if (flag == PARSE_URI_ERROR) {
@@ -208,9 +214,9 @@ void HttpData::handleRead() {
       } else
         state_ = STATE_PARSE_HEADERS;
     }
-
+    //处理消息头
     if (state_ == STATE_PARSE_HEADERS) {
-      //处理消息头
+
       HeaderState flag = this->parseHeaders();
       if (flag == PARSE_HEADER_AGAIN) //收到的信息不全
         break;
@@ -223,7 +229,7 @@ void HttpData::handleRead() {
       if (method_ == METHOD_POST) { //如果是请求POST，继续接收消息体
         // POST方法准备
         state_ = STATE_RECV_BODY;
-      } else {  //如果是GET操作，直接开始处理
+      } else {  //如果是GET、HEAD操作，直接开始处理
         state_ = STATE_ANALYSIS;
       }
     }
@@ -241,7 +247,7 @@ void HttpData::handleRead() {
       }
       //static_cast强制类型转换
       if (static_cast<int>(inBuffer_.size()) < content_length) break;
-      state_ = STATE_ANALYSIS;  //开始处理
+      state_ = STATE_ANALYSIS;  //处理状态
     }
     
     //
@@ -256,16 +262,19 @@ void HttpData::handleRead() {
         break;
       }
     }
-  } while (false);
+  } while (false);  //do while 条件为false，只循环一次
   // cout << "state_=" << state_ << endl;
+
   if (!error_) {
-    if (outBuffer_.size() > 0) {
-      handleWrite();
+    //还有数据待写入输出缓冲区，调用handleWrite，正常情况下为请求的文件内容
+    if (outBuffer_.size() > 0) {  
+      handleWrite();  
       // events_ |= EPOLLOUT;
     }
     // error_ may change
     if (!error_ && state_ == STATE_FINISH) {
       this->reset();
+      //如果inBuffer_还有数据，且连接并为断开，就调用handleRead处理剩余数据
       if (inBuffer_.size() > 0) {
         if (connectionState_ != H_DISCONNECTING) handleRead();
       }
@@ -276,7 +285,10 @@ void HttpData::handleRead() {
       //     this->reset();
       //     events_ |= EPOLLIN;
       // }
-    } else if (!error_ && connectionState_ != H_DISCONNECTED)
+
+    /*果处理状态不是STATE_FINISH，且连接未断开，可选择继续监听可读事件。
+    还有待接受的数据（通常为有数据没送到，缓冲区读空后，跳出循环，导致接受的数据不全）*/
+    } else if (!error_ && connectionState_ != H_DISCONNECTED) 
       events_ |= EPOLLIN;
   }
 }
@@ -284,12 +296,14 @@ void HttpData::handleRead() {
 void HttpData::handleWrite() {
   if (!error_ && connectionState_ != H_DISCONNECTED) {
     __uint32_t &events_ = channel_->getEvents();
-    if (writen(fd_, outBuffer_) < 0) {
+    if (writen(fd_, outBuffer_) < 0) {  //向客户端发回响应
       perror("writen");
       events_ = 0;
       error_ = true;
     }
-    if (outBuffer_.size() > 0) events_ |= EPOLLOUT;
+    //如果还有数据需要写入输出缓冲，一般为输出缓冲区满，因此修改Channel让其关注EPOLLOUT可写事件
+    if (outBuffer_.size() > 0) events_ |= EPOLLOUT; 
+    //之后，如果监听到缓冲区可写，调用可写处理函数，即本函数handleWrite，将剩余内容写入
   }
 }
 
@@ -507,7 +521,7 @@ HeaderState HttpData::parseHeaders() {
 }
 
 AnalysisState HttpData::analysisRequest() {
-  if (method_ == METHOD_POST) {
+  if (method_ == METHOD_POST) { //不处理POST请求
     // ------------------------------------------------------
     // My CV stitching handler which requires OpenCV library
     // ------------------------------------------------------
@@ -532,13 +546,15 @@ AnalysisState HttpData::analysisRequest() {
     // outBuffer_ += header + string(data_encode.begin(), data_encode.end());
     // inBuffer_ = inBuffer_.substr(length);
     // return ANALYSIS_SUCCESS;
-  } else if (method_ == METHOD_GET || method_ == METHOD_HEAD) {
-    string header;
+  } else if (method_ == METHOD_GET || method_ == METHOD_HEAD) { //处理GET、HEAD请求
+    
+    //填写响应信息
+    string header;  
     header += "HTTP/1.1 200 OK\r\n";
     if (headers_.find("Connection") != headers_.end() &&
         (headers_["Connection"] == "Keep-Alive" ||
          headers_["Connection"] == "keep-alive")) {
-      keepAlive_ = true;
+      keepAlive_ = true;  //设置活跃状态
       header += string("Connection: Keep-Alive\r\n") + "Keep-Alive: timeout=" +
                 to_string(DEFAULT_KEEP_ALIVE_TIME) + "\r\n";
     }
@@ -547,14 +563,16 @@ AnalysisState HttpData::analysisRequest() {
     if (dot_pos < 0)
       filetype = MimeType::getMime("default");
     else
-      filetype = MimeType::getMime(fileName_.substr(dot_pos));
+      //注意：这里并没有创建MimeType对象，而是直接调用其静态成员方法
+      filetype = MimeType::getMime(fileName_.substr(dot_pos));  
 
-    // echo test
+    // echo test，测试向客户端传送默认消息
     if (fileName_ == "hello") {
       outBuffer_ =
           "HTTP/1.1 200 OK\r\nContent-type: text/plain\r\n\r\nHello World";
       return ANALYSIS_SUCCESS;
     }
+
     if (fileName_ == "favicon.ico") {
       header += "Content-Type: image/png\r\n";
       header += "Content-Length: " + to_string(sizeof favicon) + "\r\n";
@@ -562,15 +580,16 @@ AnalysisState HttpData::analysisRequest() {
 
       header += "\r\n";
       outBuffer_ += header;
-      outBuffer_ += string(favicon, favicon + sizeof favicon);
+      outBuffer_ += string(favicon, favicon + sizeof favicon);  //传递图片也使用string
       ;
       return ANALYSIS_SUCCESS;
     }
 
-    struct stat sbuf;
-    if (stat(fileName_.c_str(), &sbuf) < 0) {
+    //处理请求文件
+    struct stat sbuf; //结构体
+    if (stat(fileName_.c_str(), &sbuf) < 0) { //获取文件状态信息存储到sbuf中
       header.clear();
-      handleError(fd_, 404, "Not Found!");
+      handleError(fd_, 404, "Not Found!");  //未找到文件
       return ANALYSIS_ERROR;
     }
     header += "Content-Type: " + filetype + "\r\n";
@@ -580,18 +599,19 @@ AnalysisState HttpData::analysisRequest() {
     header += "\r\n";
     outBuffer_ += header;
 
-    if (method_ == METHOD_HEAD) return ANALYSIS_SUCCESS;
+    if (method_ == METHOD_HEAD) return ANALYSIS_SUCCESS;  //如果是HEAD请求，到此分析完成
 
-    int src_fd = open(fileName_.c_str(), O_RDONLY, 0);
+    int src_fd = open(fileName_.c_str(), O_RDONLY, 0);  //读取文件，带后缀名
     if (src_fd < 0) {
       outBuffer_.clear();
       handleError(fd_, 404, "Not Found!");
       return ANALYSIS_ERROR;
     }
+    //将文件内容映射到内存，mmapRet为映射区起始地址
     void *mmapRet = mmap(NULL, sbuf.st_size, PROT_READ, MAP_PRIVATE, src_fd, 0);
     close(src_fd);
-    if (mmapRet == (void *)-1) {
-      munmap(mmapRet, sbuf.st_size);
+    if (mmapRet == (void *)-1) { //将整数-1转化为一个void指针类型，表示无效或初始化的指针
+      munmap(mmapRet, sbuf.st_size);  //关闭映射
       outBuffer_.clear();
       handleError(fd_, 404, "Not Found!");
       return ANALYSIS_ERROR;
@@ -599,7 +619,7 @@ AnalysisState HttpData::analysisRequest() {
     char *src_addr = static_cast<char *>(mmapRet);
     outBuffer_ += string(src_addr, src_addr + sbuf.st_size);
     ;
-    munmap(mmapRet, sbuf.st_size);
+    munmap(mmapRet, sbuf.st_size);  //关闭内存映射区
     return ANALYSIS_SUCCESS;
   }
   return ANALYSIS_ERROR;

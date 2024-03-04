@@ -59,10 +59,12 @@ enum HttpMethod { METHOD_POST = 1, METHOD_GET, METHOD_HEAD };
 
 enum HttpVersion { HTTP_10 = 1, HTTP_11 };
 
+//获得消息内容的类型
 class MimeType {
  private:
   static void init();
-  static std::unordered_map<std::string, std::string> mime;
+  static std::unordered_map<std::string, std::string> mime; //描述消息内容的类型
+
   MimeType();
   MimeType(const MimeType &m);
 
@@ -94,13 +96,13 @@ class HttpData : public std::enable_shared_from_this<HttpData> {
   std::shared_ptr<Channel> channel_;
   int fd_;  //监听客户端请求的套接字
   std::string inBuffer_;
-  std::string outBuffer_;
+  std::string outBuffer_; //需要写入输出缓冲的数据
   bool error_;  //错误状态
   ConnectionState connectionState_; //连接状态
   HttpMethod method_; //请求方法：GET、POST、HEAD
   HttpVersion HTTPVersion_; //HTTP版本
   std::string fileName_;
-  std::string path_;
+  std::string path_;  //改变量未被使用
   
   int nowReadPos_;  //正在读取消息的位置
   ProcessState state_;  //处理HTTP请求所处的阶段
@@ -108,7 +110,7 @@ class HttpData : public std::enable_shared_from_this<HttpData> {
   ParseState hState_;
   bool keepAlive_;  //活跃状态
   std::map<std::string, std::string> headers_;  //存放消息头信息的map
-  std::weak_ptr<TimerNode> timer_;
+  std::weak_ptr<TimerNode> timer_;  //计时器
   
   //私有成员函数
   void handleRead();

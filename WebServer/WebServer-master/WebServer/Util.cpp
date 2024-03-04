@@ -47,13 +47,13 @@ ssize_t readn(int fd, std::string &inBuffer, bool &zero) {
     if ((nread = read(fd, buff, MAX_BUFF)) < 0) {
       if (errno == EINTR) //系统中断，重新处理
         continue;
-      else if (errno == EAGAIN) { //缓冲区已经读完
+      else if (errno == EAGAIN) { //缓冲区已被读空
         return readSum;
       } else {
         perror("read error");
         return -1;
       }
-    } else if (nread == 0) {  //最可能是客户端连接关闭，可能有其他原因
+    } else if (nread == 0) {  //读到数据了，但是数量为0，最可能是客户端连接关闭，发送了EOF，可能有其他原因
       // printf("redsum = %d\n", readSum);
       zero = true;
       break;
@@ -126,6 +126,7 @@ ssize_t writen(int fd, void *buff, size_t n) {
   return writeSum;
 }
 
+//将string发送到客户端
 ssize_t writen(int fd, std::string &sbuff) {
   size_t nleft = sbuff.size();
   ssize_t nwritten = 0;
@@ -134,11 +135,11 @@ ssize_t writen(int fd, std::string &sbuff) {
   while (nleft > 0) {
     if ((nwritten = write(fd, ptr, nleft)) <= 0) {
       if (nwritten < 0) {
-        if (errno == EINTR) {
+        if (errno == EINTR) { //系统中断，继续处理
           nwritten = 0;
           continue;
-        } else if (errno == EAGAIN)
-          break;
+        } else if (errno == EAGAIN) //由于是socket是非阻塞，如果发送缓冲区被占满，就返回EAGIN
+          break;  //缓冲区满了，直接不再读取，跳出循环，记录剩下未读取的信息
         else
           return -1;
       }
@@ -150,7 +151,7 @@ ssize_t writen(int fd, std::string &sbuff) {
   if (writeSum == static_cast<int>(sbuff.size()))
     sbuff.clear();
   else
-    sbuff = sbuff.substr(writeSum);
+    sbuff = sbuff.substr(writeSum); //剩下的什么时候处理？
   return writeSum;
 }
 
