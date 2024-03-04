@@ -125,6 +125,7 @@ HttpData::HttpData(EventLoop *loop, int connfd)
       nowReadPos_(0),
       state_(STATE_PARSE_URI),
       hState_(H_START),
+      //默认不活跃
       keepAlive_(false) {
   // loop_->queueInLoop(bind(&HttpData::setHandlers, this));
   channel_->setReadHandler(bind(&HttpData::handleRead, this));
@@ -144,10 +145,11 @@ void HttpData::reset() {
   if (timer_.lock()) {  //存在与timer_共享对象的share_ptr，返回一个指向timer_的share_ptr指针
     shared_ptr<TimerNode> my_timer(timer_.lock());  
     my_timer->clearReq(); //清除该计时器信息
-    timer_.reset(); //释放该指针
+    timer_.reset(); //指针置空
   }
 }
 
+//删除计时器
 void HttpData::seperateTimer() {
   // cout << "seperateTimer" << endl;
   if (timer_.lock()) {
@@ -307,40 +309,47 @@ void HttpData::handleWrite() {
   }
 }
 
+//处理不同连接状态的函数
 void HttpData::handleConn() {
   seperateTimer();
   __uint32_t &events_ = channel_->getEvents();
-  if (!error_ && connectionState_ == H_CONNECTED) {
-    if (events_ != 0) {
-      int timeout = DEFAULT_EXPIRED_TIME;
-      if (keepAlive_) timeout = DEFAULT_KEEP_ALIVE_TIME;
-      if ((events_ & EPOLLIN) && (events_ & EPOLLOUT)) {
-        events_ = __uint32_t(0);
-        events_ |= EPOLLOUT;
+  if (!error_ && connectionState_ == H_CONNECTED) { //如果状态为已连接
+    ////如果有关注事件，设置边缘触发，设置超时时间，更新Channel
+    if (events_ != 0) { 
+      int timeout = DEFAULT_EXPIRED_TIME; //设置超时时间为默认过期时间
+      if (keepAlive_) timeout = DEFAULT_KEEP_ALIVE_TIME;  //如果活跃，超时时间延长至默认活跃时间
+      //如果即关注可读、又关注可写，则重置关注事件为可写，可写优先处理
+      if ((events_ & EPOLLIN) && (events_ & EPOLLOUT)) {  
+        events_ = __uint32_t(0);  //关注事件清空
+        events_ |= EPOLLOUT;  //关注可写
       }
       // events_ |= (EPOLLET | EPOLLONESHOT);
-      events_ |= EPOLLET;
-      loop_->updatePoller(channel_, timeout);
+      events_ |= EPOLLET; //设置边缘触发
+      loop_->updatePoller(channel_, timeout); //更新关注时间和超时时间
 
-    } else if (keepAlive_) {
+    } else if (keepAlive_) {  //没有关注事件，但仍活跃，关注可读事件
       events_ |= (EPOLLIN | EPOLLET);
       // events_ |= (EPOLLIN | EPOLLET | EPOLLONESHOT);
       int timeout = DEFAULT_KEEP_ALIVE_TIME;
-      loop_->updatePoller(channel_, timeout);
-    } else {
+      loop_->updatePoller(channel_, timeout); //更新关注时间和超时时间
+    } else {  //保持连接的情况下，既没有关注事件，又没有保持活跃，重新设置关注事件和超时时间
       // cout << "close normally" << endl;
       // loop_->shutdown(channel_);
       // loop_->runInLoop(bind(&HttpData::handleClose, shared_from_this()));
       events_ |= (EPOLLIN | EPOLLET);
       // events_ |= (EPOLLIN | EPOLLET | EPOLLONESHOT);
-      int timeout = (DEFAULT_KEEP_ALIVE_TIME >> 1);
+      int timeout = (DEFAULT_KEEP_ALIVE_TIME >> 1); //右移一位，超时时间减半
       loop_->updatePoller(channel_, timeout);
     }
-  } else if (!error_ && connectionState_ == H_DISCONNECTING &&
+  }
+  //如果处于连接正在关闭状态，且关注事件为可写，修改关注事件为可写、边缘触发，使得剩余内容继续写。
+  //。正在关闭是什么状态？不用更新到epoll_wait监听事件中么?
+  else if (!error_ && connectionState_ == H_DISCONNECTING &&
              (events_ & EPOLLOUT)) {
     events_ = (EPOLLOUT | EPOLLET);
-  } else {
+  } else {  //如果出现错误或者处于连接关闭状态
     // cout << "close with errors" << endl;
+    //可能有别的线程关闭该连接，因此要runInLoop
     loop_->runInLoop(bind(&HttpData::handleClose, shared_from_this()));
   }
 }
@@ -651,6 +660,7 @@ void HttpData::handleError(int fd, int err_num, string short_msg) {
   writen(fd, send_buff, strlen(send_buff));
 }
 
+//关闭连接
 void HttpData::handleClose() {
   connectionState_ = H_DISCONNECTED;
   shared_ptr<HttpData> guard(shared_from_this());

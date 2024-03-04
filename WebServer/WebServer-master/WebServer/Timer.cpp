@@ -46,7 +46,7 @@ bool TimerNode::isValid() {
 }
 
 void TimerNode::clearReq() {
-  SPHttpData.reset(); //rest weak_ptr,释放指向该计时器的HttpData持有者信息的指针
+  SPHttpData.reset(); //，释放指针指向的对象，释放指向该计时器的HttpData持有者信息的指针
   this->setDeleted(); //设置该计时器删除标记为TRUE
 }
 

@@ -28,8 +28,7 @@ class EventLoop {
   bool isInLoopThread() const { return threadId_ == CurrentThread::tid(); }
   void assertInLoopThread() { assert(isInLoopThread()); }
   void shutdown(shared_ptr<Channel> channel) { shutDownWR(channel->getFd()); }
-  
-  //以下三个对epoll操作的函数只会在EventLoop本线程内调用
+
   //从epoll中删除epoll_event
   void removeFromPoller(shared_ptr<Channel> channel) {
     // shutDownWR(channel->getFd());
