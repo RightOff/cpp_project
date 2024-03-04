@@ -64,12 +64,12 @@ void Epoll::epoll_mod(SP_Channel request, int timeout) {
   }
 }
 
-// 从epoll中删除描述符
+// 从epoll中删除监听的文件描述符
 void Epoll::epoll_del(SP_Channel request) {
   int fd = request->getFd();
   struct epoll_event event;
   event.data.fd = fd;
-  event.events = request->getLastEvents();
+  event.events = request->getLastEvents();  //为什么还要继续保持上次关注的事件
   // event.events = 0;
   // request->EqualAndUpdateLastEvents()
   
@@ -77,8 +77,8 @@ void Epoll::epoll_del(SP_Channel request) {
   if (epoll_ctl(epollFd_, EPOLL_CTL_DEL, fd, &event) < 0) {
     perror("epoll_del error");
   }
-  fd2chan_[fd].reset();
-  fd2http_[fd].reset();
+  fd2chan_[fd].reset(); //置空文件描述符到Channel的映射中的指针
+  fd2http_[fd].reset(); //置空文件描述符到HttpData的映射中的指针
 }
 
 // 返回活跃事件数，调用epoll_wait
@@ -117,7 +117,7 @@ std::vector<SP_Channel> Epoll::getEventsRequest(int events_num) {
 }
 
 void Epoll::add_timer(SP_Channel request_data, int timeout) {
-  shared_ptr<HttpData> t = request_data->getHolder(); //获取Channel中的持有者holder
+  shared_ptr<HttpData> t = request_data->getHolder(); //获取Channel的持有者HttpData
   if (t)
     timerManager_.addTimer(t, timeout);
   else

@@ -109,7 +109,7 @@ class HttpData : public std::enable_shared_from_this<HttpData> {
   ProcessState state_;  //处理HTTP请求所处的阶段
   
   ParseState hState_;
-  bool keepAlive_;  //活跃状态
+  bool keepAlive_;  //活跃状态，做响应处理时会使其活跃
   std::map<std::string, std::string> headers_;  //存放消息头信息的map
   std::weak_ptr<TimerNode> timer_;  //计时器
   

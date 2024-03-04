@@ -89,7 +89,7 @@ class Channel {
     if (revents_ & EPOLLOUT) {  
       handleWrite();
     }
-    handleConn();
+    handleConn(); //根据连接状态进行后续处理，关闭连接或对Channel进行相应设置（关注事件和超时剩余时间）
   }
   void handleRead();
   void handleWrite();

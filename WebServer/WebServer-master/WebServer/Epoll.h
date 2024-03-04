@@ -37,5 +37,5 @@ class Epoll {
   std::vector<epoll_event> events_; //要回传的事件列表，epoll_event中保存发生事件的文件描述符集合
   std::shared_ptr<Channel> fd2chan_[MAXFDS];  //fd到Channel的映射数组
   std::shared_ptr<HttpData> fd2http_[MAXFDS]; //fd到HttpData对象的映射数组
-  TimerManager timerManager_; //定时器管理器，删除超时的连接
+  TimerManager timerManager_; //定时器管理器
 };

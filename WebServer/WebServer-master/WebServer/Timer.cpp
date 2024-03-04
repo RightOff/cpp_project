@@ -35,9 +35,9 @@ void TimerNode::update(int timeout) {
 //验证定时器是否还有效
 bool TimerNode::isValid() {
   struct timeval now;
-  gettimeofday(&now, NULL);
+  gettimeofday(&now, NULL); //获取当前时间
   size_t temp = (((now.tv_sec % 10000) * 1000) + (now.tv_usec / 1000));
-  if (temp < expiredTime_)
+  if (temp < expiredTime_)  //预期过期时间大于当前时间，计时器合法
     return true;
   else {
     this->setDeleted(); 
@@ -58,8 +58,8 @@ TimerManager::~TimerManager() {}
 //添加定时器到定时器管理优先队列、SPHttpData中
 void TimerManager::addTimer(std::shared_ptr<HttpData> SPHttpData, int timeout) {
   SPTimerNode new_node(new TimerNode(SPHttpData, timeout));
-  timerNodeQueue.push(new_node);
-  SPHttpData->linkTimer(new_node);
+  timerNodeQueue.push(new_node);  //已经有过的SPHttpData，timeout可能不同，也会加进去么？
+  SPHttpData->linkTimer(new_node);  //设置HttpData持有的计时器为新的计时器
 }
 
 //处理逻辑是没明白？
@@ -77,14 +77,14 @@ void TimerManager::addTimer(std::shared_ptr<HttpData> SPHttpData, int timeout) {
 */
 
 
-//处理超时事件
+//处理超时事件，只是把计时器移除了么,不做其他操作?
 void TimerManager::handleExpiredEvent() {
   // MutexLockGuard locker(lock);
   while (!timerNodeQueue.empty()) {
     SPTimerNode ptimer_now = timerNodeQueue.top();
-    if (ptimer_now->isDeleted())
+    if (ptimer_now->isDeleted())  //看看删除标记是否为true,一般是删除计时器或重置计时器时会设置为true
       timerNodeQueue.pop();
-    else if (ptimer_now->isValid() == false)
+    else if (ptimer_now->isValid() == false)  //如果超时无效了，删除
       timerNodeQueue.pop();
     else
       break;

@@ -22,6 +22,7 @@ const __uint32_t DEFAULT_EVENT = EPOLLIN | EPOLLET | EPOLLONESHOT;
 const int DEFAULT_EXPIRED_TIME = 2000;              // ms，默认定时器到期事件
 const int DEFAULT_KEEP_ALIVE_TIME = 5 * 60 * 1000;  // ms，默认连接保持时间为5分钟
 
+//测试发送响应信息时使用
 char favicon[555] = {
     '\x89', 'P',    'N',    'G',    '\xD',  '\xA',  '\x1A', '\xA',  '\x0',
     '\x0',  '\x0',  '\xD',  'I',    'H',    'D',    'R',    '\x0',  '\x0',
@@ -114,6 +115,7 @@ std::string MimeType::getMime(const std::string &suffix) {
     return mime[suffix];
 }
 
+//不用设置计时器么，为什么重置的时候需要在本类里设置
 HttpData::HttpData(EventLoop *loop, int connfd)
     : loop_(loop),
       channel_(new Channel(loop, connfd)),
@@ -309,7 +311,7 @@ void HttpData::handleWrite() {
   }
 }
 
-//处理不同连接状态的函数
+//处理不同连接状态的函数，一般在handleEvents处理完成的最后一步调用
 void HttpData::handleConn() {
   seperateTimer();
   __uint32_t &events_ = channel_->getEvents();
@@ -338,16 +340,16 @@ void HttpData::handleConn() {
       // loop_->runInLoop(bind(&HttpData::handleClose, shared_from_this()));
       events_ |= (EPOLLIN | EPOLLET);
       // events_ |= (EPOLLIN | EPOLLET | EPOLLONESHOT);
-      int timeout = (DEFAULT_KEEP_ALIVE_TIME >> 1); //右移一位，超时时间减半
+      int timeout = (DEFAULT_KEEP_ALIVE_TIME >> 1); //右移一位，超时时间减半，加快连接超时
       loop_->updatePoller(channel_, timeout);
     }
   }
-  //如果处于连接正在关闭状态，且关注事件为可写，修改关注事件为可写、边缘触发，使得剩余内容继续写。
-  //。正在关闭是什么状态？不用更新到epoll_wait监听事件中么?
+  /*如果处于连接正在关闭状态，且关注事件为可写，修改关注事件为可写、边缘触发，使得剩余内容继续写。
+    H_DISCONNECTING收到客户端关闭连接请求且服务器还要传送信息。不用更新到epoll_wait监听事件中么?*/
   else if (!error_ && connectionState_ == H_DISCONNECTING &&
              (events_ & EPOLLOUT)) {
     events_ = (EPOLLOUT | EPOLLET);
-  } else {  //如果出现错误或者处于连接关闭状态
+  } else {  //如果出现错误、处于正在关闭状态但服务器没有数据需要传输、处于连接关闭状态（一般不会）
     // cout << "close with errors" << endl;
     //可能有别的线程关闭该连接，因此要runInLoop
     loop_->runInLoop(bind(&HttpData::handleClose, shared_from_this()));
@@ -529,6 +531,7 @@ HeaderState HttpData::parseHeaders() {
   return PARSE_HEADER_AGAIN;
 }
 
+//响应处理，将响应的信息写入outBuffer_，在这里不写入输出缓冲
 AnalysisState HttpData::analysisRequest() {
   if (method_ == METHOD_POST) { //不处理POST请求
     // ------------------------------------------------------
@@ -663,10 +666,10 @@ void HttpData::handleError(int fd, int err_num, string short_msg) {
 //关闭连接
 void HttpData::handleClose() {
   connectionState_ = H_DISCONNECTED;
-  shared_ptr<HttpData> guard(shared_from_this());
+  shared_ptr<HttpData> guard(shared_from_this()); //加一个guard是什么意思？
   loop_->removeFromPoller(channel_);
 }
-//
+//创建新关注的事件，一般为MainReactor调用
 void HttpData::newEvent() {
   //channel中已经存有处理客户端的套接字，现在传入关注的事件
   channel_->setEvents(DEFAULT_EVENT);
