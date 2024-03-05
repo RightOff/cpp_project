@@ -95,7 +95,7 @@ void EventLoop::runInLoop(Functor&& cb) {
 导致新添加的回调函数的执行为无限期拖后*/
 void EventLoop::queueInLoop(Functor&& cb) {
   {
-    MutexLockGuard lock(mutex_);  //加锁，如何解锁的？
+    MutexLockGuard lock(mutex_);  //加锁，本函数执行结束后，会析构，析构时解锁。但有何意义呢？
     pendingFunctors_.emplace_back(std::move(cb));
   }
 
@@ -139,10 +139,10 @@ void EventLoop::doPendingFunctors() {
 
 //主动关闭事件循环
 void EventLoop::quit() {
-  quit_ = true;
-  //判断是否是当前线程调用，如果不是，则唤醒EventLoop去处理事件
+  quit_ = true; //表示该EventLoop将要销毁
+  //判断是否是当前线程调用，如果是，本EventLoop已经处理完所有事件，可以直接结束。如果不是，则唤醒EventLoop去处理剩余事件
   if (!isInLoopThread()) {
-    //唤醒之后会继续处理一轮事件，然后再进入判断语句，然后因为 quit_ = true 而退出循环。
+    //唤醒之后会继续处理一轮事件，然后再进入判断语句，然后因为 quit_ = true 而关闭loop,退出循环处理。
     wakeup();
   }
 }

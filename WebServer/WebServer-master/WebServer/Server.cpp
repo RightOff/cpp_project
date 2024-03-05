@@ -46,7 +46,7 @@ void Server::handNewConn() {
   int accept_fd = 0;
   while ((accept_fd = accept(listenFd_, (struct sockaddr *)&client_addr,
                              &client_addr_len)) > 0) {
-    //从EventLoopThreadPool中分配一个EventLoop
+    //从EventLoopThreadPool中分配一个EventLoop，这个EventLoop已经在loop了
     EventLoop *loop = eventLoopThreadPool_->getNextLoop();  
     LOG << "New connection from " << inet_ntoa(client_addr.sin_addr) << ":"
         << ntohs(client_addr.sin_port);

@@ -19,9 +19,9 @@ class EventLoopThreadPool : noncopyable {
 
  private:
   EventLoop* baseLoop_; //MainReactor中的loop
-  bool started_;  //开始状态
+  bool started_;  //线程池开启状态
   int numThreads_;  //线程数量
-  int next_;  //线程池标号
+  int next_;  //EventLoop池中下一个可被分配的EventLoop的标号
   std::vector<std::shared_ptr<EventLoopThread>> threads_; //EventLoopThread线程池
   std::vector<EventLoop*> loops_; //EventLoop池
 };

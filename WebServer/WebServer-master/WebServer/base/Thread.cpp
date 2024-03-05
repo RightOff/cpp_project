@@ -33,7 +33,7 @@ void CurrentThread::cacheTid() {
   }
 }
 
-// 为了在线程中保留name,tid这些数据
+// ThreadData结构，为了在线程中保留name,tid这些数据
 struct ThreadData {
   typedef Thread::ThreadFunc ThreadFunc;
   ThreadFunc func_;
@@ -47,8 +47,8 @@ struct ThreadData {
 
   void runInThread() {
     *tid_ = CurrentThread::tid(); //为什么再次获取tid?
-    tid_ = NULL;  //为什么要置空
-    latch_->countDown();
+    tid_ = NULL;  //本线程创建完毕，置空准备创建下一个线程
+    latch_->countDown();  //latch_减1
     latch_ = NULL;
 
     CurrentThread::t_threadName = name_.empty() ? "Thread" : name_.c_str(); //将name_转换成C类型字符数组
@@ -69,6 +69,7 @@ void* startThread(void* obj) {
   return NULL;
 }
 
+//构造函数
 Thread::Thread(const ThreadFunc& func, const string& n)
     : started_(false),
       joined_(false),
@@ -94,7 +95,7 @@ void Thread::setDefaultName() {
 
 void Thread::start() {
   assert(!started_);
-  started_ = true;  //设置为开启状态
+  started_ = true;  //设置本线程为开启状态
   //存储线程信息
   ThreadData* data = new ThreadData(func_, name_, &tid_, &latch_);
   
@@ -103,7 +104,7 @@ void Thread::start() {
     started_ = false;
     delete data;
   } else {
-    latch_.wait();
+    latch_.wait();  //阻塞，确保该线程已经启动并运行传入的函数
     assert(tid_ > 0);
   }
 }
@@ -112,5 +113,5 @@ int Thread::join() {
   assert(started_);
   assert(!joined_);
   joined_ = true;
-  return pthread_join(pthreadId_, NULL);
+  return pthread_join(pthreadId_, NULL);  //等到该线程执行结束返回0
 }

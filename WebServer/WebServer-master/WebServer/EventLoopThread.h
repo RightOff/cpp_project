@@ -19,7 +19,7 @@ class EventLoopThread : noncopyable {//noncopyable 是一个常见的工具类�
   bool exiting_;  //用于指示线程是否应该退出其事件循环。
   Thread thread_; //一个 Thread 对象，代表执行事件循环的线程。
   MutexLock mutex_; //用于保护共享资源（如 exiting_ 标志）免受多个线程的同时访问。
-  Condition cond_;  //与mutex_关联实现线程同步
+  Condition cond_;  //条件变量，与mutex_关联实现线程同步
   
   void threadFunc();
 

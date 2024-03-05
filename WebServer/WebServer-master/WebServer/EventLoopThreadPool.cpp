@@ -12,7 +12,8 @@ EventLoopThreadPool::EventLoopThreadPool(EventLoop *baseLoop, int numThreads)
 
 void EventLoopThreadPool::start() {
   baseLoop_->assertInLoopThread();  //仅供调试时使用
-  started_ = true;  //设置线程池为开始状态
+  started_ = true;  //设置线程池为开启状态
+  //将指定数量的线程逐个开启
   for (int i = 0; i < numThreads_; ++i) {
     std::shared_ptr<EventLoopThread> t(new EventLoopThread());  //创建一个EventLoopThread
     threads_.push_back(t);  //添加进EventLoopThread线程池
@@ -25,7 +26,7 @@ EventLoop *EventLoopThreadPool::getNextLoop() {
   assert(started_);
   EventLoop *loop = baseLoop_;  //loop暂时指向MainReactor的loop
   if (!loops_.empty()) {
-    loop = loops_[next_]; //从EventLoop池中按顺序选择一个EventLoop分配
+    loop = loops_[next_]; //从EventLoop池中按顺序循环选择一个EventLoop分配
     next_ = (next_ + 1) % numThreads_;  //计算下一个可分配的EventLoop
   }
   return loop;
