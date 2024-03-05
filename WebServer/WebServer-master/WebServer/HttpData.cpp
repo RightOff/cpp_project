@@ -12,6 +12,8 @@
 
 using namespace std;
 
+//以下內容是什麼時候執行的？
+
 /* 初始化MimeType静态成员变量。其中pthread_once_t是用于多线程控制初始化过程的类型，
   确保某个函数在本进程中仅执行一次。*/
 pthread_once_t MimeType::once_control = PTHREAD_ONCE_INIT;
