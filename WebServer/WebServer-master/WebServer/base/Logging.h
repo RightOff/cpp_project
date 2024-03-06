@@ -29,6 +29,7 @@ class Logger {
     int line_;
     std::string basename_;
   };
+  //成员变量
   Impl impl_;
   static std::string logFileName_;  //类间共同使用日志文件路径logFileName_
 };
