@@ -12,6 +12,7 @@ class AsyncLogging;
 
 class Logger {
  public:
+  //构造函数调用实现类实现
   Logger(const char *fileName, int line);
   ~Logger();
   LogStream &stream() { return impl_.stream_; }
@@ -26,12 +27,15 @@ class Logger {
     void formatTime();
 
     LogStream stream_;
-    int line_;
-    std::string basename_;
+    int line_;  //记录行号
+    std::string basename_;  //
   };
+
   //成员变量
-  Impl impl_;
+  Impl impl_; //实现类，实现具体功能
   static std::string logFileName_;  //类间共同使用日志文件路径logFileName_
 };
 
-#define LOG Logger(__FILE__, __LINE__).stream()
+// 宏定义，Logger(__FILE__, __LINE__)表示实例化一个类，
+// __FILE__这个宏会被替换为当前源文件的文件名（包括路径），__LINE__这个宏会被替换为当前源代码行号
+#define LOG Logger(__FILE__, __LINE__).stream() 

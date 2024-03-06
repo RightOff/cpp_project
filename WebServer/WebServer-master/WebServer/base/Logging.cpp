@@ -37,14 +37,15 @@ Logger::Impl::Impl(const char *fileName, int line)
 
 void Logger::Impl::formatTime()
 {
-    struct timeval tv;
+    struct timeval tv;  //存储时间的结构体
     time_t time;
     char str_t[26] = {0};
-    gettimeofday (&tv, NULL);
-    time = tv.tv_sec;
-    struct tm* p_time = localtime(&time);   
-    strftime(str_t, 26, "%Y-%m-%d %H:%M:%S\n", p_time);
-    stream_ << str_t;
+    gettimeofday (&tv, NULL);   //获取当前时间
+    time = tv.tv_sec;   //取出当前时间，刻度为秒
+    struct tm* p_time = localtime(&time);   //将UTC时间转换为本地时间
+    //将本地时间转换为年月日、小时分钟秒的形式，存储到str_t字符数组中，最多可放26个字节
+    strftime(str_t, 26, "%Y-%m-%d %H:%M:%S\n", p_time); 
+    stream_ << str_t;   //放入LogStream中
 }
 
 Logger::Logger(const char *fileName, int line)
