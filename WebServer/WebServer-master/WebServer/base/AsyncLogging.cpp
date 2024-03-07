@@ -71,8 +71,9 @@ void AsyncLogging::threadFunc() {
       currentBuffer_.reset(); 
       currentBuffer_ = std::move(newBuffer1); //移动赋值，currentBuffer_接管newBuffer1
 
-      //将待写入日志信息的容器内容交给buffersToWrite写入文件中
+      //核心：将待写入日志信息的容器内容交给buffersToWrite
       buffersToWrite.swap(buffers_);  
+
       //如果备用缓冲区不存在，将newBuffer2给它
       if (!nextBuffer_) {
         nextBuffer_ = std::move(newBuffer2);
@@ -95,7 +96,7 @@ void AsyncLogging::threadFunc() {
       buffersToWrite.erase(buffersToWrite.begin() + 2, buffersToWrite.end());
     }
 
-    //将缓冲区内容交由Logile写入文件中
+    //核心：将缓冲区内容交由Logile写入文件中
     for (size_t i = 0; i < buffersToWrite.size(); ++i) {
       // FIXME: use unbuffered stdio FILE ? or use ::writev ?
       output.append(buffersToWrite[i]->data(), buffersToWrite[i]->length());
@@ -125,5 +126,5 @@ void AsyncLogging::threadFunc() {
     buffersToWrite.clear(); //清除后端缓冲区容器内容
     output.flush(); //立即写入磁盘
   }
-  output.flush(); //以防有剩余日志为写入磁盘
+  output.flush(); //以防有剩余日志未写入磁盘
 }

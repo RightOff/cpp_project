@@ -28,8 +28,8 @@ class AsyncLogging : noncopyable {
 
   void stop() {
     running_ = false;
-    cond_.notify();
-    thread_.join();
+    cond_.notify(); //喚醒線程執行函數繼續執行剩餘的緩衝區
+    thread_.join(); //等待線程結束
   }
 
  private:
