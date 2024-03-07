@@ -26,14 +26,14 @@ class Logger {
     Impl(const char *fileName, int line);
     void formatTime();
 
-    LogStream stream_;  //日志信息
+    LogStream stream_;  //日志流對象
     int line_;  //记录行号
     std::string basename_;  //记录文件名
   };
 
   //成员变量
   Impl impl_; //实现类，实现具体功能
-  static std::string logFileName_;  //类间共同使用日志文件路径logFileName_
+  static std::string logFileName_;  //日誌的文件名，类间共同使用日志文件路径logFileName_
 };
 
 // 宏定义，Logger(__FILE__, __LINE__)表示实例化一个类，

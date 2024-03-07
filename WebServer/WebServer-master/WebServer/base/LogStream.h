@@ -120,5 +120,5 @@ class LogStream : noncopyable {
 
   Buffer buffer_; //Buffer缓冲区
 
-  static const int kMaxNumericSize = 32;  //确保写入任何数值类型时，都不会发生缓冲区溢出
+  static const int kMaxNumericSize = 32;  //确保写入任何数值类型时，都不会发生缓冲区溢出？
 };

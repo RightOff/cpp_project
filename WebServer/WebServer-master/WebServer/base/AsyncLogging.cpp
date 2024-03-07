@@ -28,15 +28,15 @@ void AsyncLogging::append(const char* logline, int len) {
   MutexLockGuard lock(mutex_);
   if (currentBuffer_->avail() > len)
     currentBuffer_->append(logline, len);
-  else {
+  else {  //如果緩衝區已滿，加入容器，
     buffers_.push_back(currentBuffer_);
-    currentBuffer_.reset();
+    currentBuffer_.reset(); //重置指向當前緩衝的區指針
     if (nextBuffer_)
-      currentBuffer_ = std::move(nextBuffer_);
+      currentBuffer_ = std::move(nextBuffer_);  //如果有備用緩衝區可用，移動賦值給當前緩衝區指針
     else
-      currentBuffer_.reset(new Buffer);
+      currentBuffer_.reset(new Buffer); //如果沒有，指向新開闢的一個緩衝區
     currentBuffer_->append(logline, len);
-    cond_.notify();
+    cond_.notify(); //緩衝區已滿，通知等待條件變量的線程可以將緩衝區放入容器中
   }
 }
 
@@ -64,15 +64,15 @@ void AsyncLogging::threadFunc() {
       //如果buffers_容器为空，等待flushInterval_时间，前端向currentBuffer_放入信息后再继续
       if (buffers_.empty())  // unusual usage!
       {
-        cond_.waitForSeconds(flushInterval_);
+        cond_.waitForSeconds(flushInterval_); //當前緩衝區已滿或者等待時間已到
       }
       buffers_.push_back(currentBuffer_); //将前端存储的日志信息buffer放入vector
-
       //对指针的reset，指向缓冲区对象的引用计数减1，如果该计数变为0，则删除该对象，释放其内存将currentBuffer重置为空指针
       currentBuffer_.reset(); 
-
       currentBuffer_ = std::move(newBuffer1); //移动赋值，currentBuffer_接管newBuffer1
-      buffersToWrite.swap(buffers_);  //将待写入日志信息的容器内容交给buffersToWrite写入文件中
+
+      //将待写入日志信息的容器内容交给buffersToWrite写入文件中
+      buffersToWrite.swap(buffers_);  
       //如果备用缓冲区不存在，将newBuffer2给它
       if (!nextBuffer_) {
         nextBuffer_ = std::move(newBuffer2);

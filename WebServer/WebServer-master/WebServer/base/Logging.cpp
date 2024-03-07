@@ -15,12 +15,13 @@ static AsyncLogging *AsyncLogger_;
 
 std::string Logger::logFileName_ = "./WebServer.log";
 
+//初始化後端管理日誌的對象AsyncLogger_，初始化只執行一次
 void once_init()
 {
     AsyncLogger_ = new AsyncLogging(Logger::getLogFileName());
     AsyncLogger_->start(); 
 }
-
+//輸出後端
 void output(const char* msg, int len)
 {
     pthread_once(&once_control_, once_init);
@@ -32,9 +33,10 @@ Logger::Impl::Impl(const char *fileName, int line)
     line_(line),
     basename_(fileName)
 {
-    formatTime();
+    formatTime();   
 }
 
+//向日誌流對象中加入時間
 void Logger::Impl::formatTime()
 {
     struct timeval tv;  //存储时间的结构体
@@ -54,7 +56,8 @@ Logger::Logger(const char *fileName, int line)
 
 Logger::~Logger()
 {
-    impl_.stream_ << " -- " << impl_.basename_ << ':' << impl_.line_ << '\n';
-    const LogStream::Buffer& buf(stream().buffer());
+    //日誌信息產生的文件、行號輸入到LogStream
+    impl_.stream_ << " -- " << impl_.basename_ << ':' << impl_.line_ << '\n';   
+    const LogStream::Buffer& buf(stream().buffer());    //獲取日誌流中存儲日誌信息的數組引用
     output(buf.data(), buf.length());
 }
