@@ -26,9 +26,9 @@ class Logger {
     Impl(const char *fileName, int line);
     void formatTime();
 
-    LogStream stream_;
+    LogStream stream_;  //日志信息
     int line_;  //记录行号
-    std::string basename_;  //
+    std::string basename_;  //记录文件名
   };
 
   //成员变量

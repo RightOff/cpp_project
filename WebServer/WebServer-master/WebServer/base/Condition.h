@@ -32,6 +32,6 @@ class Condition : noncopyable {
   }
 
  private:
-  MutexLock &mutex;
-  pthread_cond_t cond;
+  MutexLock &mutex; //锁
+  pthread_cond_t cond;  //条件变量
 };

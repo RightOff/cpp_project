@@ -113,5 +113,6 @@ int Thread::join() {
   assert(started_);
   assert(!joined_);
   joined_ = true;
-  return pthread_join(pthreadId_, NULL);  //等到该线程执行结束返回0
+  //等到该线程执行结束，释放线程资源，获取结束时的返回信息（NULL表示不进行存储）
+  return pthread_join(pthreadId_, NULL);  
 }

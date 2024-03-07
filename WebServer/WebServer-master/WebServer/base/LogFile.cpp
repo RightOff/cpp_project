@@ -27,7 +27,7 @@ void LogFile::append(const char* logline, int len) {
 
 void LogFile::flush() {
   MutexLockGuard lock(*mutex_);
-  file_->flush();
+  file_->flush(); //缓冲区写入文件实际操作
 }
 
 void LogFile::append_unlocked(const char* logline, int len) {

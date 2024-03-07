@@ -14,7 +14,7 @@ class CountDownLatch : noncopyable {
   void countDown();
 
  private:
-  mutable MutexLock mutex_;
-  Condition condition_;
+  mutable MutexLock mutex_; //锁
+  Condition condition_; //封装的条件变量，持有一把锁
   int count_;
 };

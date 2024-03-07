@@ -28,7 +28,7 @@ class MutexLock : noncopyable {
   friend class Condition;
 };
 
-//封装使用线程锁
+//封装管理线程锁
 class MutexLockGuard : noncopyable {
  public:
   explicit MutexLockGuard(MutexLock &_mutex) : mutex(_mutex) { mutex.lock(); }
