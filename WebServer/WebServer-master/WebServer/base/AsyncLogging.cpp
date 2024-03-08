@@ -30,7 +30,7 @@ void AsyncLogging::append(const char* logline, int len) {
     currentBuffer_->append(logline, len);
   else {  //如果緩衝區已滿，加入容器，
     buffers_.push_back(currentBuffer_);
-    currentBuffer_.reset(); //重置指向當前緩衝的區指針
+    currentBuffer_.reset(); //重置指向當前緩衝的區指針，但缓冲区还在
     if (nextBuffer_)
       currentBuffer_ = std::move(nextBuffer_);  //如果有備用緩衝區可用，移動賦值給當前緩衝區指針
     else
@@ -84,7 +84,7 @@ void AsyncLogging::threadFunc() {
 
     //后端控制buffersToWrite将日志信息转交给LogFile对象，让其负责写入磁盘
 
-    //为什么是25？删掉之后的元素，岂不是有的日志信息不再写入文件了？
+    //其作用是防止内存不足导致进程崩溃。但为什么是25？删掉之后的元素，岂不是有的日志信息不再写入文件了？
     if (buffersToWrite.size() > 25) {
       // char buf[256];
       // snprintf(buf, sizeof buf, "Dropped log messages at %s, %zd larger
@@ -110,7 +110,7 @@ void AsyncLogging::threadFunc() {
     if (!newBuffer1) {
       assert(!buffersToWrite.empty());
       //将buffersToWrite中的最后一个指向buffer的指针赋给newBuffer1
-      newBuffer1 = buffersToWrite.back();
+      newBuffer1 = buffersToWrite.back(); //复用已经写入内核的缓冲区
       buffersToWrite.pop_back();  //移除最后一个元素
       //对对象的reset，重置缓冲区可写位置为数组头部
       newBuffer1->reset();
