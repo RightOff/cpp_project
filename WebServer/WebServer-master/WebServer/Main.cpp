@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
     }
   }
   Logger::setLogFileName(logPath);  //Logger类存储静态日志文件保存路径
-// STL库在多线程上应用da
+// STL库在多线程上应用
 #ifndef _PTHREADS
   LOG << "_PTHREADS is not defined !";
 #endif
