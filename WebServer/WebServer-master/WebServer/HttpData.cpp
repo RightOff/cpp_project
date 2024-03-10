@@ -600,7 +600,7 @@ AnalysisState HttpData::analysisRequest() {
     }
 
     // string path = "/clh/cpp/WebServer/build/Debug/WebServer/";
-    fileName_ = "/clh/cpp/WebServer/build/Debug/WebServer/helloWorld";
+    // fileName_ = "/clh/cpp/WebServer/build/Debug/WebServer/helloWorld";
     //处理请求文件
     struct stat sbuf; //结构体
     if (stat(fileName_.c_str(), &sbuf) < 0) { //获取文件状态信息存储到sbuf中
