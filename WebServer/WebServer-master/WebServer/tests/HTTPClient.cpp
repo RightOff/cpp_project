@@ -51,45 +51,45 @@ int main(int argc, char *argv[]) {
   buff[0] = '\0';
   // 发空串
   const char *p = " ";
-  if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) == 0) { //连接成功时返回0
-    setSocketNonBlocking1(sockfd);  //设置socket为非阻塞状态
-    cout << "1:" << endl;
-    ssize_t n = write(sockfd, p, strlen(p));  //传输字符串p
-    cout << "strlen(p) = " << strlen(p) << endl;
-    sleep(1); //等待1ms后再读取
-    n = read(sockfd, buff, 4096); //读取内容到buff中，最大可读长度为4096
-    cout << "n=" << n << endl;
-    printf("%s", buff); 
-    close(sockfd);  //关闭socket
-  } else {
-    perror("err1");
-  }
-  sleep(1);
+  // if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) == 0) { //连接成功时返回0
+  //   setSocketNonBlocking1(sockfd);  //设置socket为非阻塞状态
+  //   cout << "1:" << endl;
+  //   ssize_t n = write(sockfd, p, strlen(p));  //传输字符串p
+  //   cout << "strlen(p) = " << strlen(p) << endl;
+  //   sleep(1); //等待1ms后再读取
+  //   n = read(sockfd, buff, 4096); //读取内容到buff中，最大可读长度为4096
+  //   cout << "n=" << n << endl;
+  //   printf("%s", buff); 
+  //   close(sockfd);  //关闭socket
+  // } else {
+  //   perror("err1");
+  // }
+  // sleep(1);
 
-  // 发"GET  HTTP/1.1"
-  p = "GET  HTTP/1.1";
-  sockfd = socket(AF_INET, SOCK_STREAM, 0);
-  if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) == 0) {
-    setSocketNonBlocking1(sockfd);
-    cout << "2:" << endl;
-    ssize_t n = write(sockfd, p, strlen(p));
-    cout << "strlen(p) = " << strlen(p) << endl;
-    sleep(1);
-    n = read(sockfd, buff, 4096);
-    cout << "n=" << n << endl;
-    printf("%s", buff);
-    close(sockfd);
-  } else {
-    perror("err2");
-  }
-  sleep(1);
+  // // 发"GET  HTTP/1.1"
+  // p = "GET /hello.html HTTP/1.1";
+  // sockfd = socket(AF_INET, SOCK_STREAM, 0);
+  // if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) == 0) {
+  //   setSocketNonBlocking1(sockfd);
+  //   cout << "2:" << endl;
+  //   ssize_t n = write(sockfd, p, strlen(p));
+  //   cout << "strlen(p) = " << strlen(p) << endl;
+  //   sleep(1);
+  //   n = read(sockfd, buff, 4096);
+  //   cout << "n=" << n << endl;
+  //   printf("%s", buff);
+  //   close(sockfd);
+  // } else {
+  //   perror("err2");
+  // }
+  // sleep(1);
 
   // 发
   // GET  HTTP/1.1
   // Host: 192.168.52.135:8888
   // Content-Type: application/x-www-form-urlencoded
   // Connection: Keep-Alive
-  p = "GET / HTTP/1.1\r\nHost: 192.168.52.135:8888\r\nContent-Type: "
+  p = "GET /helloWorld HTTP/1.1\r\nHost: 192.168.52.135:8888\r\nContent-Type: "
       "application/x-www-form-urlencoded\r\nConnection: Keep-Alive\r\n\r\n";
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) == 0) {
@@ -100,7 +100,8 @@ int main(int argc, char *argv[]) {
     sleep(1);
     n = read(sockfd, buff, 4096);
     cout << "n=" << n << endl;
-    printf("%s", buff);
+    printf("%s\n", buff);
+
     close(sockfd);
   } else {
     perror("err3");

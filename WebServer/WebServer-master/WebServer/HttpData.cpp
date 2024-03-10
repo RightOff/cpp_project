@@ -583,14 +583,14 @@ AnalysisState HttpData::analysisRequest() {
     // echo test，测试向客户端传送默认消息
     if (fileName_ == "hello") {
       outBuffer_ =
-          "HTTP/1.1 200 OK\r\nContent-type: text/plain\r\n\r\nHello World";
+          "HTTP/1.1 200 OK\r\nContent-type: text/plain\r\n\r\n Hello World";
       return ANALYSIS_SUCCESS;
     }
 
     if (fileName_ == "favicon.ico") {
       header += "Content-Type: image/png\r\n";
       header += "Content-Length: " + to_string(sizeof favicon) + "\r\n";
-      header += "Server: LinYa's Web Server\r\n";
+      header += "Server: chenlinhao's Web Server\r\n";
 
       header += "\r\n";
       outBuffer_ += header;
@@ -599,6 +599,8 @@ AnalysisState HttpData::analysisRequest() {
       return ANALYSIS_SUCCESS;
     }
 
+    // string path = "/clh/cpp/WebServer/build/Debug/WebServer/";
+    fileName_ = "/clh/cpp/WebServer/build/Debug/WebServer/helloWorld";
     //处理请求文件
     struct stat sbuf; //结构体
     if (stat(fileName_.c_str(), &sbuf) < 0) { //获取文件状态信息存储到sbuf中
@@ -608,7 +610,7 @@ AnalysisState HttpData::analysisRequest() {
     }
     header += "Content-Type: " + filetype + "\r\n";
     header += "Content-Length: " + to_string(sbuf.st_size) + "\r\n";
-    header += "Server: LinYa's Web Server\r\n";
+    header += "Server: chenlinhao's Web Server\r\n";
     // 头部结束
     header += "\r\n";
     outBuffer_ += header;
@@ -647,13 +649,13 @@ void HttpData::handleError(int fd, int err_num, string short_msg) {
   body_buff += "<html><title>哎~出错了</title>";
   body_buff += "<body bgcolor=\"ffffff\">";
   body_buff += to_string(err_num) + short_msg;
-  body_buff += "<hr><em> LinYa's Web Server</em>\n</body></html>";
+  body_buff += "<hr><em> chenlinhao's Web Server</em>\n</body></html>";
 
   header_buff += "HTTP/1.1 " + to_string(err_num) + short_msg + "\r\n";
   header_buff += "Content-Type: text/html\r\n";
   header_buff += "Connection: Close\r\n";
   header_buff += "Content-Length: " + to_string(body_buff.size()) + "\r\n";
-  header_buff += "Server: LinYa's Web Server\r\n";
+  header_buff += "Server: 's Web Server\r\n";
   ;
   header_buff += "\r\n";  //消息头和消息体之间的空行
   // 错误处理不考虑writen不完的情况
