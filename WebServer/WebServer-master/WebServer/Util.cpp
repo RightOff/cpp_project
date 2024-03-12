@@ -47,7 +47,7 @@ ssize_t readn(int fd, std::string &inBuffer, bool &zero) {
     if ((nread = read(fd, buff, MAX_BUFF)) < 0) {
       if (errno == EINTR) //系统中断，重新处理
         continue;
-      else if (errno == EAGAIN) { //缓冲区已被读空
+      else if (errno == EAGAIN) { //缓冲区已被读空，EAGIN和EWOULDBLOCK相同，为了便于移植有时可能两个都需要检查
         return readSum;
       } else {
         perror("read error");
