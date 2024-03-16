@@ -38,7 +38,7 @@ struct ThreadData {
   typedef Thread::ThreadFunc ThreadFunc;
   ThreadFunc func_;
   string name_;
-  pid_t* tid_;
+  pid_t* tid_;  
   CountDownLatch* latch_;
 
   ThreadData(const ThreadFunc& func, const string& name, pid_t* tid,
@@ -46,8 +46,8 @@ struct ThreadData {
       : func_(func), name_(name), tid_(tid), latch_(latch) {}
 
   void runInThread() {
-    *tid_ = CurrentThread::tid(); //为什么再次获取tid?
-    tid_ = NULL;  //本线程创建完毕，置空准备创建下一个线程
+    *tid_ = CurrentThread::tid(); //设置存储当前线程信息CurrentThread中的线程id
+    tid_ = NULL;  //为什么要传tid_进来，并没有实际用到，有何意义？
     latch_->countDown();  //latch_减1
     latch_ = NULL;
 
@@ -82,7 +82,9 @@ Thread::Thread(const ThreadFunc& func, const string& n)
 }
 
 Thread::~Thread() {
-  if (started_ && !joined_) pthread_detach(pthreadId_);
+  //判断线程正在运行，且还没有结束，然后会将该线程分离，当该线程终止时，立即自动回收其占用的资源，不保留终止状态。
+  //不能对一个已经处于detach状态的线程调用pthread_join，这样的调用将返回EINVAL错误
+  if (started_ && !joined_) pthread_detach(pthreadId_); 
 }
 
 void Thread::setDefaultName() {
@@ -99,7 +101,7 @@ void Thread::start() {
   //存储线程信息
   ThreadData* data = new ThreadData(func_, name_, &tid_, &latch_);
   
-  //创建线程，成功返回0，data为要传入线程的参数
+  //创建子线程，成功返回0，data为要传入线程的参数
   if (pthread_create(&pthreadId_, NULL, &startThread, data)) {
     started_ = false;
     delete data;

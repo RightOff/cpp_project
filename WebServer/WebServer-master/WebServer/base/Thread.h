@@ -26,8 +26,8 @@ class Thread : noncopyable {
   void setDefaultName();  //如果名字为空，设置默认名字
   bool started_;  //线程开启状态
   bool joined_; //标志线程是否结束
-  pthread_t pthreadId_; //线程id
-  pid_t tid_; //进程id
+  pthread_t pthreadId_; //在该线程中创建的子线程id
+  pid_t tid_; //本线程id
   ThreadFunc func_;
   std::string name_;  //线程名
   CountDownLatch latch_;  //条件变量观察的条件
