@@ -670,7 +670,8 @@ void HttpData::handleError(int fd, int err_num, string short_msg) {
 //关闭连接
 void HttpData::handleClose() {
   connectionState_ = H_DISCONNECTED;
-  shared_ptr<HttpData> guard(shared_from_this()); //加一个guard是什么意思？
+  //shared_from_this()为指向本对象的智能指针，但是再添加一个指针是什么意思？
+  shared_ptr<HttpData> guard(shared_from_this()); 
   loop_->removeFromPoller(channel_);
 }
 //创建新关注的事件，一般为MainReactor调用

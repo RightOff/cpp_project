@@ -69,11 +69,11 @@ void Epoll::epoll_del(SP_Channel request) {
   int fd = request->getFd();
   struct epoll_event event;
   event.data.fd = fd;
-  event.events = request->getLastEvents();  //为什么还要继续保持上次关注的事件
+  event.events = request->getLastEvents();  //要删除Channel对应的事件
   // event.events = 0;
   // request->EqualAndUpdateLastEvents()
   
-  //既然是删除，应该可以直接传NULL为什么还要传event?
+  //删除对应的Channel信息
   if (epoll_ctl(epollFd_, EPOLL_CTL_DEL, fd, &event) < 0) {
     perror("epoll_del error");
   }

@@ -6,6 +6,7 @@
 #include <iostream>
 #include "Util.h"
 #include "base/Logging.h"
+#include <thread>
 
 using namespace std;
 
@@ -95,10 +96,15 @@ void EventLoop::runInLoop(Functor&& cb) {
 导致新添加的回调函数的执行为无限期拖后*/
 void EventLoop::queueInLoop(Functor&& cb) {
   {
-    MutexLockGuard lock(mutex_);  //加锁，本函数执行结束后，会析构，析构时解锁。但有何意义呢？
+    MutexLockGuard lock(mutex_);  //加锁，本函数执行结束后，会析构，析构时解锁。互斥的访问待处理事件队列
     pendingFunctors_.emplace_back(std::move(cb));
   }
 
+  // cout << std::this_thread::get_id() << std::endl;
+
+/*   当前线程不是事件循环所在线程，在这种情况下需要唤醒事件循环线程及时处理函数队列中的函数 || 
+  callingPendingFunctors_为true说明正在处理函数队列，通过wakeup让其在执行完后，下一轮循环时不会阻塞，继续拿取函数队列中的函数处理 */
+  
   if (!isInLoopThread() || callingPendingFunctors_) wakeup();
 }
 
@@ -128,10 +134,12 @@ void EventLoop::doPendingFunctors() {
   std::vector<Functor> functors;
   callingPendingFunctors_ = true;
 
+  //人为制造作用域
   {
     MutexLockGuard lock(mutex_);
     functors.swap(pendingFunctors_);
   }
+  //以上作用域结束
 
   for (size_t i = 0; i < functors.size(); ++i) functors[i](); //执行pendingFunctors_中的函数
   callingPendingFunctors_ = false;

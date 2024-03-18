@@ -15,7 +15,7 @@ TimerNode::TimerNode(std::shared_ptr<HttpData> requestData, int timeout)
       (((now.tv_sec % 10000) * 1000) + (now.tv_usec / 1000)) + timeout; //万一now.tv_sec % 10000=9999，那么接下来的expiredTime_不就越来越小了么？
 }
 
-//析构会处理SPHttpData
+//析构会处理SPHttpData,一般为到期了，从优先队列中弹出，然后析构时移除相应的Channel
 TimerNode::~TimerNode() {
   if (SPHttpData) SPHttpData->handleClose();
 }
@@ -77,7 +77,7 @@ void TimerManager::addTimer(std::shared_ptr<HttpData> SPHttpData, int timeout) {
 */
 
 
-//处理超时事件，只是把计时器移除了么,不做其他操作?
+//处理超时事件，把计时器移除,在TimerNode析构时会关闭连接
 void TimerManager::handleExpiredEvent() {
   // MutexLockGuard locker(lock);
   while (!timerNodeQueue.empty()) {
