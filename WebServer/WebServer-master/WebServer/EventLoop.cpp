@@ -118,7 +118,7 @@ void EventLoop::loop() {
   while (!quit_) {
     // cout << "doing" << endl;
     ret.clear();
-    ret = poller_->poll();  //获取活跃事件
+    ret = poller_->poll();  //获取活跃事件，其中调用epoll_wait
     
     eventHandling_ = true;
     for (auto& it : ret) it->handleEvents();  //处理活跃的事件
